@@ -110,7 +110,7 @@ const UI = (function () {
     const aviso = col.querySelector(".column-warning");
     creditsSpan.classList.remove("over-30", "over-34");
     aviso.classList.remove("show");
-    if (creditos > 34) {
+    if (creditos > 45) {
       creditsSpan.classList.add("over-34");
       aviso.classList.add("show");
     } else if (creditos > 30) {
