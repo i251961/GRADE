@@ -1,135 +1,136 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Planejador de Graduação — Engenharia Mecânica UNICAMP</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seleção de Perfil</title>
+  <style>
+    /* Reset básico e configurações de fundo */
+    body {
+      background-color: #0d1117; /* Fundo escuro */
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: #c9d1d9;
+    }
+
+    /* Container principal do menu */
+    .menu-container {
+      background-color: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      width: 280px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Cabeçalho com nome do perfil */
+    .header {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid #30363d;
+      font-weight: 600;
+      color: #e6edf3;
+      font-size: 15px;
+    }
+
+    .avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      margin-right: 10px;
+      background-color: #30363d;
+      object-fit: cover;
+    }
+
+    .psite-text {
+      font-weight: 400;
+      color: #8b949e;
+      margin-left: 6px;
+    }
+
+    .verified-icon {
+      color: #238636; /* Verde do check */
+      margin-left: auto;
+    }
+
+    /* Lista de pastas */
+    .menu-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .menu-item {
+      border-bottom: 1px solid #30363d;
+    }
+
+    .menu-item:last-child {
+      border-bottom: none;
+    }
+
+    /* Links de navegação */
+    .menu-link {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      text-decoration: none;
+      color: #e6edf3;
+      font-size: 14px;
+      transition: background-color 0.2s ease;
+    }
+
+    .menu-link:hover {
+      background-color: #1f242c;
+    }
+
+    /* Ícone de pasta */
+    .folder-icon {
+      color: #8b949e; /* Cinza do ícone de pasta */
+      margin-right: 12px;
+      fill: currentColor;
+    }
+  </style>
 </head>
 <body>
 
-<!-- ===================== TOPO ===================== -->
-<header class="topbar">
-  <div class="topbar-left">
-    <div class="brand-mark" aria-hidden="true">
-      <svg viewBox="0 0 40 40" width="34" height="34">
-        <circle cx="20" cy="20" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/>
-        <g stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
-          <line x1="20" y1="2" x2="20" y2="9"/>
-          <line x1="20" y1="31" x2="20" y2="38"/>
-          <line x1="2" y1="20" x2="9" y2="20"/>
-          <line x1="31" y1="20" x2="38" y2="20"/>
-          <line x1="7.5" y1="7.5" x2="12.5" y2="12.5"/>
-          <line x1="27.5" y1="27.5" x2="32.5" y2="32.5"/>
-          <line x1="32.5" y1="7.5" x2="27.5" y2="12.5"/>
-          <line x1="12.5" y1="27.5" x2="7.5" y2="32.5"/>
-        </g>
+  <div class="menu-container">
+    
+    <div class="header">
+      <img src="https://via.placeholder.com/26" alt="Avatar" class="avatar">
+      <span>i251961 <span class="psite-text">Psite</span></span>
+      
+      <svg class="verified-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+        <path fill-rule="evenodd" d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"></path>
       </svg>
     </div>
-    <div class="brand-text">
-      <h1>Planejador de Graduação</h1>
-      <p>Engenharia Mecânica · UNICAMP</p>
-    </div>
+
+    <ul class="menu-list">
+      
+      <li class="menu-item">
+        <a href="https://i251961.github.io/GRADE/ICARO" class="menu-link">
+          <svg class="folder-icon" width="18" height="18" viewBox="0 0 16 16">
+            <path d="M1.75 1A1.75 1.75 0 000 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0016 13.25v-8.5A1.75 1.75 0 0014.25 3H7.5a.25.25 0 01-.2-.1l-.9-1.2C6.07 1.26 5.55 1 5 1H1.75z"></path>
+          </svg>
+          ICARO
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="https://i251961.github.io/GRADE/PAULA" class="menu-link">
+          <svg class="folder-icon" width="18" height="18" viewBox="0 0 16 16">
+            <path d="M1.75 1A1.75 1.75 0 000 2.75v10.5C0 14.216.784 15 1.75 15h12.5A1.75 1.75 0 0016 13.25v-8.5A1.75 1.75 0 0014.25 3H7.5a.25.25 0 01-.2-.1l-.9-1.2C6.07 1.26 5.55 1 5 1H1.75z"></path>
+          </svg>
+          PAULA
+        </a>
+      </li>
+
+    </ul>
   </div>
-  <div class="topbar-right">
-    <button id="btn-reset" class="btn-ghost" title="Restaurar grade original">Restaurar grade</button>
-  </div>
-</header>
 
-<!-- ===================== BARRA DE PESQUISA ===================== -->
-<div class="search-row">
-  <div class="search-box">
-    <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    <input id="search-input" type="text" placeholder="Pesquisar disciplina — código ou nome (ex: MA, EM5, Cálculo)">
-  </div>
-  <div class="legend">
-    <span class="legend-item"><i class="dot dot-planejada"></i>Planejada</span>
-    <span class="legend-item"><i class="dot dot-cursando"></i>Cursando</span>
-    <span class="legend-item"><i class="dot dot-concluida"></i>Concluída</span>
-    <span class="legend-item"><i class="dot dot-trancada"></i>Trancada</span>
-  </div>
-</div>
-
-<!-- ===================== DASHBOARD ===================== -->
-<section class="dashboard" id="dashboard">
-  <div class="stat-card">
-    <span class="stat-label">Curso</span>
-    <span class="stat-value stat-value--small" id="stat-curso">Engenharia Mecânica</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-label">Disciplinas concluídas</span>
-    <span class="stat-value" id="stat-disc-concluidas">0 / 0</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-label">Créditos concluídos</span>
-    <span class="stat-value" id="stat-creditos-concluidos">0</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-label">Créditos restantes</span>
-    <span class="stat-value" id="stat-creditos-restantes">0</span>
-  </div>
-  <div class="stat-card stat-card--progress">
-    <span class="stat-label">Progresso do curso</span>
-    <div class="progress-track">
-      <div class="progress-fill" id="progress-fill"></div>
-    </div>
-    <span class="progress-percent" id="progress-percent">0%</span>
-  </div>
-</section>
-
-<!-- ===================== QUADRO DE SEMESTRES ===================== -->
-<main class="board" id="board">
-  <!-- colunas geradas via JS -->
-</main>
-
-<!-- ===================== MODAL DE DETALHES ===================== -->
-<div class="modal-overlay" id="modal-overlay">
-  <aside class="modal-panel" id="modal-panel" role="dialog" aria-modal="true">
-    <button class="modal-close" id="modal-close" aria-label="Fechar">✕</button>
-
-    <div class="modal-header">
-      <span class="modal-codigo" id="modal-codigo">EM102</span>
-      <h2 class="modal-nome" id="modal-nome">Nome da disciplina</h2>
-      <div class="modal-status-row">
-        <label for="modal-status">Status</label>
-        <select id="modal-status">
-          <option value="planejada">Planejada</option>
-          <option value="cursando">Cursando</option>
-          <option value="concluida">Concluída</option>
-          <option value="trancada">Trancada</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="modal-grid">
-      <div><span class="modal-field-label">Créditos</span><span id="modal-creditos">—</span></div>
-      <div><span class="modal-field-label">Departamento</span><span id="modal-departamento">—</span></div>
-      <div><span class="modal-field-label">Tipo</span><span id="modal-tipo">—</span></div>
-      <div><span class="modal-field-label">Semestre sugerido</span><span id="modal-semestre">—</span></div>
-    </div>
-
-    <div class="modal-section">
-      <span class="modal-field-label">Pré-requisitos</span>
-      <div class="chip-row" id="modal-prereqs"><span class="chip chip-empty">Nenhum</span></div>
-    </div>
-
-    <div class="modal-section">
-      <span class="modal-field-label">Disciplinas desbloqueadas</span>
-      <div class="chip-row" id="modal-desbloqueia"><span class="chip chip-empty">Nenhuma</span></div>
-    </div>
-
-    <div class="modal-section modal-section--grow">
-      <span class="modal-field-label">Observações</span>
-      <textarea id="modal-obs" placeholder="Professor bom, muito difícil, estudar antes..."></textarea>
-    </div>
-  </aside>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script src="dados.js"></script>
-<script src="script.js"></script>
 </body>
 </html>
