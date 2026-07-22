@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CORUJAFINDER · Buscar por URL</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+  :root {
+    --bg: #090c0b;
+    --bg-soft: #0d1210;
+    --panel: #0e1613;
+    --panel-2: #0f1f18;
+    --border: rgba(148, 214, 190, 0.14);
+    --border-strong: rgba(148, 214, 190, 0.28);
+    --green: #22d999;
+    --green-soft: rgba(34, 217, 153, 0.12);
+    --green-dim: rgba(34, 217, 153, 0.55);
+    --red: #e6584f;
+    --red-soft: rgba(230, 88, 79, 0.12);
+    --red-dim: rgba(230, 88, 79, 0.45);
+    --text: #eef3f1;
+    --text-dim: #8fa39b;
+    --text-faint: #566962;
+    --mono: 'SFMono-Regular', 'JetBrains Mono', Consolas, Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 18% -10%, rgba(34, 217, 153, 0.08), transparent 40%),
+      radial-gradient(circle at 85% 10%, rgba(34, 217, 153, 0.05), transparent 35%);
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(9, 12, 11, 0.85);
+    backdrop-filter: blur(6px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .topbar-pills {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .brand-dot {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 13px;
+    color: #06110d;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .brand-dot.sem-logo { background: linear-gradient(135deg, var(--green), #0e8f66); }
+
+  .brand-dot img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .brand-text b { font-size: 15px; letter-spacing: 0.2px; }
+  .brand-text span { display: block; font-size: 11px; color: var(--text-faint); font-family: var(--mono); }
+
+  .nav { display: flex; gap: 6px; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-dim);
+    border: 1px solid transparent;
+    background: none;
+    font-family: var(--sans);
+    cursor: pointer;
+  }
+
+  .nav-item:hover { color: var(--text); }
+
+  .nav-item.active {
+    color: var(--text);
+    background: var(--green-soft);
+    border-color: var(--border-strong);
+  }
+
+  .nav-item code {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    background: rgba(255,255,255,0.04);
+    padding: 2px 5px;
+    border-radius: 4px;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-faint); }
+  .status-pill.online .status-dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .status-pill.online { color: var(--green); border-color: var(--green-dim); }
+  .status-pill.offline .status-dot { background: var(--red); }
+  .status-pill.offline { color: var(--red); border-color: var(--red-dim); }
+
+  /* ---------- Main ---------- */
+  main { max-width: 920px; margin: 0 auto; padding: 44px 24px 80px; }
+
+  h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: -0.3px; }
+  .subtitle { color: var(--text-dim); font-size: 14px; margin: 0 0 28px; }
+
+  /* ---------- Search card ---------- */
+  .card {
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    padding: 26px 28px;
+    position: relative;
+    overflow: visible;
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(34,217,153,0.10), transparent 55%);
+    pointer-events: none;
+  }
+
+  .card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .card-head h2 { font-size: 18px; margin: 0 0 4px; }
+  .card-head p { margin: 0; font-size: 13px; color: var(--text-dim); }
+
+  .field-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--green);
+    background: var(--green-soft);
+    border: 1px solid var(--green-dim);
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .field-group { margin-bottom: 14px; }
+
+  .field-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    font-family: var(--mono);
+    letter-spacing: 0.3px;
+  }
+
+  .search-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+
+  .limite-wrap { flex: 0 0 108px; }
+
+  .limite-wrap .field-label { margin-bottom: 6px; }
+
+  .input-limite {
+    text-align: center;
+    font-family: var(--mono);
+    font-weight: 600;
+    -moz-appearance: textfield;
+  }
+
+  .input-limite::-webkit-outer-spin-button,
+  .input-limite::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .field-hint {
+    display: block;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  input[type="text"], input[type="password"], input[type="number"] {
+    flex: 1;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-strong);
+    color: var(--text);
+    font-size: 15px;
+    padding: 0 16px;
+    height: 54px;
+    border-radius: 10px;
+    font-family: var(--sans);
+    outline: none;
+    transition: border-color 0.15s ease;
+    width: 100%;
+  }
+
+  /* O navegador (Safari/Chrome no celular) força fundo branco + texto preto
+     quando acha que o campo é de autofill/senha/site — ignorando o CSS
+     normal. Isso força de volta o tema escuro nesse estado. O delay gigante
+     na transition é um truque conhecido pra atrasar o navegador reaplicar o
+     fundo branco dele. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--text) !important;
+    -webkit-box-shadow: 0 0 0px 1000px #0f1613 inset !important;
+    box-shadow: 0 0 0px 1000px #0f1613 inset !important;
+    caret-color: var(--text);
+    transition: background-color 9999s ease-in-out 0s;
+  }
+
+  input::placeholder { color: var(--text-faint); }
+  input:focus { border-color: var(--green-dim); }
+
+  /* O navegador força fundo claro/texto escuro em campos com autofill
+     (ex: sugestão de site/URL) por padrão, ignorando o CSS normal. Esse
+     truque (box-shadow inset gigante + text-fill-color) força o tema
+     escuro mesmo nesse caso. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--text) !important;
+    -webkit-box-shadow: 0 0 0px 1000px #101d19 inset !important;
+    box-shadow: 0 0 0px 1000px #101d19 inset !important;
+    caret-color: var(--text);
+    transition: background-color 9999s ease-in-out 0s;
+  }
+  input.invalido { border-color: var(--red-dim); }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    background: var(--green);
+    color: #06140f;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 0 22px;
+    height: 54px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.05s ease;
+    white-space: nowrap;
+  }
+
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.55; cursor: default; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border-strong);
+    font-weight: 500;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .btn-ghost:hover { color: var(--text); border-color: var(--green-dim); filter: none; }
+  .btn-ghost:disabled { opacity: 0.4; }
+
+  #btnVerificar { height: 54px; white-space: nowrap; }
+
+  .info-bar {
+    margin-top: 16px;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--green);
+    background: var(--green-soft);
+    border: 1px solid var(--green-dim);
+    padding: 10px 14px;
+    border-radius: 10px;
+    display: none;
+  }
+
+  .info-bar.show { display: flex; }
+  .info-bar.error { color: var(--red); background: var(--red-soft); border-color: var(--red-dim); }
+  .info-bar .muted { color: var(--text-dim); }
+
+  /* ---------- Results ---------- */
+  .results-head {
+    margin: 40px 0 14px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .results-head h2 { font-size: 17px; margin: 0 0 4px; }
+  .results-head p { margin: 0; font-size: 13px; color: var(--text-dim); }
+
+  .results-actions { display: flex; gap: 8px; }
+
+  .results-panel {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    min-height: 180px;
+    overflow: hidden;
+  }
+
+  .results-table-head {
+    display: grid;
+    grid-template-columns: 48px minmax(160px, 1fr) 2fr;
+    padding: 12px 22px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.6px;
+    color: var(--text-faint);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 56px 20px;
+    color: var(--text-faint);
+    text-align: center;
+  }
+
+  .empty-state svg { margin-bottom: 14px; opacity: 0.5; }
+  .empty-state .main-msg { color: var(--text-dim); font-size: 14px; margin-bottom: 4px; }
+  .empty-state .sub-msg { font-size: 12px; }
+
+  .result-row {
+    display: grid;
+    grid-template-columns: 48px minmax(160px, 1fr) 2fr;
+    align-items: center;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+
+  .result-row:last-child { border-bottom: none; }
+  .result-row:hover { background: rgba(255,255,255,0.015); }
+
+  .result-index {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  .result-componente {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    word-break: break-word;
+  }
+
+  .result-evento {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    word-break: break-word;
+  }
+
+  .footer-note {
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 12px;
+    margin-top: 22px;
+    font-family: var(--mono);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--green);
+    color: #06140f;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 999px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 50;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---------- Dropdown customizado (pacotes) ---------- */
+  .custom-select { position: relative; width: 100%; }
+
+  .custom-select-btn {
+    width: 100%;
+    height: 54px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-strong);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 0 14px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+  }
+
+  .custom-select-btn:hover,
+  .custom-select.open .custom-select-btn { border-color: var(--green-dim); }
+
+  .custom-select-btn .chevron { color: var(--text-faint); font-size: 11px; transition: transform 0.15s ease; }
+  .custom-select.open .chevron { transform: rotate(180deg); }
+
+  .custom-select-list {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #0c1512;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+    overflow: hidden;
+    z-index: 30;
+    display: none;
+  }
+
+  .custom-select.open .custom-select-list { display: block; }
+
+  .custom-select-option {
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .custom-select-option:last-child { border-bottom: none; }
+  .custom-select-option:hover { background: var(--green-soft); color: var(--text); }
+  .custom-select-option.selected { background: rgba(34, 217, 153, 0.16); color: var(--green); font-weight: 600; }
+
+  /* ---------- Tela de pagamento PIX (exemplo) ---------- */
+  .pix-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .pix-qr-box {
+    width: 100%;
+    max-width: 240px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pix-qr-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #333;
+    letter-spacing: 0.5px;
+  }
+
+  .pix-info { width: 100%; max-width: 420px; }
+
+  /* Lado a lado só em telas realmente largas (desktop) */
+  @media (min-width: 760px) {
+    .pix-layout { flex-direction: row; align-items: flex-start; gap: 28px; }
+    .pix-qr-box { flex: 0 0 240px; width: 240px; max-width: none; }
+    .pix-info { flex: 1; max-width: none; min-width: 0; }
+  }
+
+  .pix-resumo {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+  }
+
+  .pix-resumo-linha {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 5px 0;
+    color: var(--text-dim);
+  }
+
+  .pix-resumo-linha b { color: var(--text); font-family: var(--mono); }
+
+  .pix-copia-row { display: flex; gap: 8px; margin-top: 6px; }
+
+  .pix-copia-row input {
+    flex: 1;
+    min-width: 0;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-strong);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 0 12px;
+    height: 40px;
+    border-radius: 8px;
+  }
+
+  .pix-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+
+  .pix-status .status-dot {
+    background: #d0a72a;
+    box-shadow: 0 0 8px #d0a72a;
+    animation: pulse 1.2s infinite;
+  }
+
+  .pix-status.pago .status-dot { background: var(--green); box-shadow: 0 0 8px var(--green); animation: none; }
+  .pix-status.pago { color: var(--green); }
+
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  html, body { overflow-x: hidden; }
+
+  /* ---------- Banner de avisos ---------- */
+  #avisosBanner { display: flex; flex-direction: column; gap: 8px; }
+  .aviso-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  .aviso-item.info { background: var(--green-soft); color: var(--green); }
+  .aviso-item.alerta { background: rgba(208, 167, 42, 0.12); color: #d0a72a; border-color: rgba(208, 167, 42, 0.3); }
+  .aviso-item.sucesso { background: var(--green-soft); color: var(--green); }
+
+
+  @media (max-width: 759px) {
+    .topbar { padding: 10px 14px; gap: 8px 12px; }
+    .brand-text b { font-size: 14px; }
+    .brand-text span { font-size: 10px; }
+
+    .topbar-pills { flex: 1 1 100%; justify-content: flex-end; order: 2; }
+    .status-pill { min-width: 0; }
+    .status-pill span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .nav { flex: 1 1 100%; order: 3; gap: 8px; }
+    .nav-item { flex: 1; justify-content: center; padding: 9px 8px; font-size: 12px; min-width: 0; }
+    .nav-item code { display: none; }
+
+    main { padding: 28px 14px 60px; }
+    .card { padding: 18px 16px; }
+    h1 { font-size: 22px; }
+
+    input[type="text"], input[type="password"], input[type="number"] {
+      font-size: 17px;
+      height: 60px;
+    }
+
+    .search-row { flex-direction: column; align-items: stretch; }
+    .search-row > * { flex: none; }
+    #termoInput { width: 100%; }
+    .limite-wrap { flex: none; width: 100%; }
+    .btn { padding: 13px; }
+    .btn-ghost { width: 100%; }
+
+    .results-table-head, .result-row { grid-template-columns: 1fr 1fr; gap: 10px; padding-left: 14px; padding-right: 14px; }
+    .results-table-head span:first-child, .result-index { display: none; }
+
+    .results-head { flex-direction: column; align-items: stretch; }
+    .results-actions { width: 100%; }
+    .results-actions .btn-ghost { flex: 1; }
+  }
+
+@media (max-width: 759px) {
+  #termoInput {
+    height: 60px !important;
+    font-size: 16px !important;
+    min-height: 60px !important;
+  }
+}
+
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-dot" id="brandDot">
+        <img src="logo.png" alt="Logo" onerror="this.parentElement.classList.add('sem-logo'); this.replaceWith(document.createTextNode('Lg'))">
+      </div>
+      <div class="brand-text">
+        <b>CORUJAFINDER</b>
+        <span>· URL · v2</span>
+      </div>
+    </div>
+    <div class="topbar-pills">
+      <div class="status-pill" id="saldoPill" style="display:none;">
+        <span class="status-dot"></span>
+        <span id="saldoText">saldo: —</span>
+      </div>
+      <div class="status-pill" id="statusPill">
+        <span class="status-dot"></span>
+        <span id="statusText">verificando...</span>
+      </div>
+      <button type="button" class="btn-ghost" id="btnLogout" style="display:none;">Sair</button>
+    </div>
+    <div class="nav" id="navAbas" style="display:none;">
+      <button type="button" class="nav-item active" id="tabBuscar" data-view="viewBuscar">Buscar <code>0x01</code></button>
+      <button type="button" class="nav-item" id="tabComprar" data-view="viewComprar">Comprar moedas <code>0x02</code></button>
+    </div>
+  </div>
+
+  <div id="avisosBanner"></div>
+
+  <main>
+    <section id="viewAuth">
+      <h1>Entrar.</h1>
+      <p class="subtitle">Faça login ou crie uma conta para usar o buscador.</p>
+
+      <div class="card" style="max-width:420px; margin:0 auto;">
+        <div class="nav" style="margin-bottom:20px;">
+          <button type="button" class="nav-item active" id="tabLogin" data-authview="painelLogin">Entrar</button>
+          <button type="button" class="nav-item" id="tabCadastro" data-authview="painelCadastro">Cadastrar</button>
+        </div>
+
+        <div id="painelLogin">
+          <div class="field-group">
+            <label class="field-label" for="loginEmailInput">E-MAIL</label>
+            <input type="text" id="loginEmailInput" placeholder="seuemail@exemplo.com" autocomplete="email">
+          </div>
+          <div class="field-group" style="margin-top:14px;">
+            <label class="field-label" for="loginSenhaInput">SENHA</label>
+            <input type="password" id="loginSenhaInput" placeholder="Sua senha" autocomplete="current-password">
+          </div>
+          <div style="margin-top:18px;">
+            <button class="btn" id="btnLogin" style="width:100%;">Entrar</button>
+          </div>
+          <div class="info-bar" id="infoBarLogin"><span id="infoTextoLogin"></span></div>
+        </div>
+
+        <div id="painelCadastro" style="display:none;">
+          <div class="field-group">
+            <label class="field-label" for="cadastroEmailInput">E-MAIL</label>
+            <input type="text" id="cadastroEmailInput" placeholder="seuemail@exemplo.com" autocomplete="email">
+          </div>
+          <div class="field-group" style="margin-top:14px;">
+            <label class="field-label" for="cadastroSenhaInput">SENHA (mínimo 6 caracteres)</label>
+            <input type="password" id="cadastroSenhaInput" placeholder="Crie uma senha" autocomplete="new-password">
+          </div>
+          <div style="margin-top:18px;">
+            <button class="btn" id="btnCadastro" style="width:100%;">Criar conta</button>
+          </div>
+          <div class="info-bar" id="infoBarCadastro"><span id="infoTextoCadastro"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewBuscar" style="display:none;">
+    <h1>Bem-vindo.</h1>
+    <p class="subtitle">Busque registros pela URL — o resultado mostra apenas usuário e senha.</p>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Buscar por URL</h2>
+          <p>A busca é aplicada somente ao campo <b style="color:var(--text)">URL</b>.</p>
+        </div>
+        <div class="field-tag">campo: url</div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="termoInput">URL</label>
+        <div class="search-row">
+          <input type="text" id="termoInput" placeholder="ex: site.com ou https://site.com/login" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" name="origem_busca_nao_autofill">
+          <div class="limite-wrap">
+            <label class="field-label" for="limiteInput">LIMITE</label>
+            <input type="number" id="limiteInput" class="input-limite" min="1" max="100000" step="1" value="500" title="Quantos registros buscar/exportar (1-100000). A tela sempre mostra só os 500 primeiros.">
+          </div>
+          <button class="btn-ghost" id="btnVerificar" title="Consulta gratuita — não desconta moedas">
+            Verificar disponibilidade
+          </button>
+          <button class="btn" id="btnBuscar">
+            <span id="btnLabel">Buscar registros</span>
+          </button>
+        </div>
+        <span class="field-hint">O limite define quantos registros são buscados (e ficam disponíveis para copiar/exportar) — até 100.000. Na tela sempre aparecem só os primeiros 500. Cada busca cobra moedas proporcionalmente ao retornado. "Verificar disponibilidade" não cobra moedas.</span>
+      </div>
+
+      <div class="info-bar" id="infoBar">
+        <span id="infoTexto"></span>
+      </div>
+    </div>
+
+    <div class="results-head">
+      <div>
+        <h2>Resultados da busca</h2>
+        <p>Usuário e senha encontrados para a URL informada.</p>
+      </div>
+      <div class="results-actions">
+        <button class="btn-ghost" id="btnCopiar" disabled>Copiar</button>
+        <button class="btn-ghost" id="btnExportar" disabled>Exportar .txt</button>
+      </div>
+    </div>
+
+    <div class="results-panel" id="resultsPanel">
+      <div class="empty-state" id="emptyState">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+        <div class="main-msg">Nenhuma busca realizada ainda.</div>
+        <div class="sub-msg">Informe o token, digite uma URL e clique em "Buscar registros".</div>
+      </div>
+    </div>
+
+    <div class="footer-note" id="footerNote"></div>
+    </section>
+
+    <section id="viewComprar" style="display:none;">
+      <h1>Comprar moedas.</h1>
+      <p class="subtitle">Escolha quantas moedas adicionar ao seu token e pague com PIX.</p>
+
+      <!-- Passo 1: escolher pacote + dados do pagador -->
+      <div class="card" id="compraPasso1">
+        <div class="card-head">
+          <div>
+            <h2>Escolher pacote</h2>
+            <p>O token usado é o mesmo salvo na busca — pode trocar se quiser adicionar moedas a outro token.</p>
+          </div>
+        </div>
+
+        <div class="field-group" style="margin-top:14px;">
+          <label class="field-label">PACOTE</label>
+          <div class="custom-select" id="pacoteCompraDropdown">
+            <button type="button" class="custom-select-btn" id="pacoteCompraBtn">
+              <span id="pacoteCompraBtnLabel">Carregando pacotes...</span>
+              <span class="chevron">▾</span>
+            </button>
+            <div class="custom-select-list" id="pacoteCompraList">
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group" style="margin-top:14px;">
+          <label class="field-label" for="cupomInput">CUPOM DE DESCONTO (opcional)</label>
+          <input type="text" id="cupomInput" placeholder="Ex: FERIAS20" style="text-transform:uppercase;" autocomplete="off">
+        </div>
+
+        <div class="field-group" style="margin-top:18px;">
+          <label class="field-label" for="clienteNomeInput">NOME COMPLETO</label>
+          <input type="text" id="clienteNomeInput" placeholder="Seu nome completo" autocomplete="name">
+        </div>
+
+        <div class="field-group" style="margin-top:14px;">
+          <label class="field-label" for="clienteDocumentoInput">CPF OU CNPJ</label>
+          <input type="text" id="clienteDocumentoInput" placeholder="Só números ou com pontuação" inputmode="numeric" autocomplete="off">
+        </div>
+
+        <div class="field-group" style="margin-top:14px;">
+          <label class="field-label" for="clienteEmailInput">E-MAIL</label>
+          <input type="text" id="clienteEmailInput" placeholder="seuemail@exemplo.com" autocomplete="email">
+        </div>
+
+        <div class="field-group" style="margin-top:14px;">
+          <label class="field-label" for="clienteTelefoneInput">TELEFONE (COM DDD)</label>
+          <input type="text" id="clienteTelefoneInput" placeholder="(11) 98765-4321" inputmode="numeric" autocomplete="tel">
+        </div>
+
+        <div style="margin-top:18px;">
+          <button class="btn" id="btnContinuarPagamento">Gerar PIX</button>
+        </div>
+
+        <div class="info-bar" id="infoBarCompra"><span id="infoTextoCompra"></span></div>
+      </div>
+
+      <!-- Passo 2: pagamento PIX -->
+      <div class="card" id="compraPasso2" style="display:none;">
+        <div class="card-head">
+          <div>
+            <h2>Pagar com PIX</h2>
+            <p>Escaneie o QR code ou copie o código abaixo no app do seu banco.</p>
+          </div>
+        </div>
+
+        <div class="pix-layout">
+          <div class="pix-qr-box" id="pixQrBox">
+            <div id="pixQrCanvas"></div>
+            <div class="pix-qr-label">ESCANEIE COM O APP DO BANCO</div>
+          </div>
+
+          <div class="pix-info">
+            <div class="pix-resumo">
+              <div class="pix-resumo-linha"><span>Token</span><b id="resumoToken">—</b></div>
+              <div class="pix-resumo-linha"><span>Moedas</span><b id="resumoMoedas">—</b></div>
+              <div class="pix-resumo-linha"><span>Valor</span><b id="resumoValor">—</b></div>
+            </div>
+
+            <label class="field-label" style="margin-top:14px; display:block;">PIX COPIA E COLA</label>
+            <div class="pix-copia-row">
+              <input type="text" id="pixCopiaColaInput" readonly>
+              <button class="btn-ghost" id="btnCopiarPix">Copiar</button>
+            </div>
+
+            <div class="pix-status" id="pixStatusBox">
+              <span class="status-dot"></span>
+              <span id="pixStatusText">Aguardando pagamento...</span>
+            </div>
+
+            <button class="btn-ghost" id="btnVoltarCompra" style="margin-top:16px;">← Escolher outro pacote</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+
+  <div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Ajuste aqui se a API estiver rodando em outro host/porta
+  const API_BASE = "http://38.210.209.233:8000";
+
+  // --- Configuração do Supabase — troque pelos valores do SEU projeto ---
+  // (Project Settings > API no painel do Supabase). A "anon key" é pública
+  // por natureza (protegida por RLS/pela própria API, não por sigilo) —
+  // tudo bem ela aparecer no código do frontend.
+  const SUPABASE_URL = "https://nftraimmgoedcikmsall.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_XA1XRqMAdvtVhabbGqQw5A_s9An8HW6";
+
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Mesmo padrão usado na API: só aceita domínio (site.com) ou URL completa
+  // (https://site.com/login) — bloqueia palavras soltas.
+  const PADRAO_SITE = /^(https?:\/\/)?([a-zA-Z0-9.-]+)\.[a-zA-Z]{2,}(\/.*)?$/;
+
+  // A tela sempre mostra no máximo isto, mesmo que o limite pedido seja maior.
+  // Copiar/exportar usam TODOS os registros buscados (até o limite pedido),
+  // não só os que aparecem na tabela.
+  const LIMITE_EXIBICAO_TELA = 500;
+
+  const termoInput = document.getElementById("termoInput");
+  const limiteInput = document.getElementById("limiteInput");
+  const btnBuscar = document.getElementById("btnBuscar");
+  const btnVerificar = document.getElementById("btnVerificar");
+  const btnLabel = document.getElementById("btnLabel");
+  const btnCopiar = document.getElementById("btnCopiar");
+  const btnExportar = document.getElementById("btnExportar");
+  const resultsPanel = document.getElementById("resultsPanel");
+  const emptyState = document.getElementById("emptyState");
+  const infoBar = document.getElementById("infoBar");
+  const infoTexto = document.getElementById("infoTexto");
+  const footerNote = document.getElementById("footerNote");
+  const statusPill = document.getElementById("statusPill");
+  const statusText = document.getElementById("statusText");
+  const saldoPill = document.getElementById("saldoPill");
+  const saldoText = document.getElementById("saldoText");
+  const toast = document.getElementById("toast");
+
+  // ---------------------------------------------------------------------
+  // Autenticação (Supabase Auth) — login, cadastro, logout, sessão
+  // ---------------------------------------------------------------------
+  const viewAuth = document.getElementById("viewAuth");
+  const navAbas = document.getElementById("navAbas");
+  const btnLogout = document.getElementById("btnLogout");
+  const tabLogin = document.getElementById("tabLogin");
+  const tabCadastro = document.getElementById("tabCadastro");
+  const painelLogin = document.getElementById("painelLogin");
+  const painelCadastro = document.getElementById("painelCadastro");
+  const loginEmailInput = document.getElementById("loginEmailInput");
+  const loginSenhaInput = document.getElementById("loginSenhaInput");
+  const btnLogin = document.getElementById("btnLogin");
+  const cadastroEmailInput = document.getElementById("cadastroEmailInput");
+  const cadastroSenhaInput = document.getElementById("cadastroSenhaInput");
+  const btnCadastro = document.getElementById("btnCadastro");
+
+  function mostrarInfoAuth(elBar, elTexto, msg, erro = false) {
+    elBar.classList.add("show");
+    elBar.classList.toggle("error", erro);
+    elTexto.textContent = msg;
+  }
+
+  [tabLogin, tabCadastro].forEach(aba => {
+    aba.addEventListener("click", () => {
+      const alvo = aba.dataset.authview;
+      [tabLogin, tabCadastro].forEach(a => a.classList.remove("active"));
+      aba.classList.add("active");
+      painelLogin.style.display = alvo === "painelLogin" ? "" : "none";
+      painelCadastro.style.display = alvo === "painelCadastro" ? "" : "none";
+    });
+  });
+
+  btnCadastro.addEventListener("click", async () => {
+    const email = cadastroEmailInput.value.trim();
+    const senha = cadastroSenhaInput.value;
+    if (!email || !senha) {
+      mostrarInfoAuth(document.getElementById("infoBarCadastro"), document.getElementById("infoTextoCadastro"), "Preencha e-mail e senha.", true);
+      return;
+    }
+    btnCadastro.disabled = true;
+    const rotulo = btnCadastro.textContent;
+    btnCadastro.textContent = "Criando conta...";
+    try {
+      const { error } = await supabaseClient.auth.signUp({ email, password: senha });
+      if (error) {
+        mostrarInfoAuth(document.getElementById("infoBarCadastro"), document.getElementById("infoTextoCadastro"), error.message, true);
+        return;
+      }
+      mostrarInfoAuth(
+        document.getElementById("infoBarCadastro"), document.getElementById("infoTextoCadastro"),
+        "Conta criada! Se a confirmação de e-mail estiver ativada no seu projeto, verifique sua caixa de entrada antes de entrar."
+      );
+    } catch (e) {
+      mostrarInfoAuth(document.getElementById("infoBarCadastro"), document.getElementById("infoTextoCadastro"), "Não foi possível contatar o Supabase agora.", true);
+    } finally {
+      btnCadastro.disabled = false;
+      btnCadastro.textContent = rotulo;
+    }
+  });
+
+  btnLogin.addEventListener("click", async () => {
+    const email = loginEmailInput.value.trim();
+    const senha = loginSenhaInput.value;
+    if (!email || !senha) {
+      mostrarInfoAuth(document.getElementById("infoBarLogin"), document.getElementById("infoTextoLogin"), "Preencha e-mail e senha.", true);
+      return;
+    }
+    btnLogin.disabled = true;
+    const rotulo = btnLogin.textContent;
+    btnLogin.textContent = "Entrando...";
+    try {
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+      if (error) {
+        mostrarInfoAuth(document.getElementById("infoBarLogin"), document.getElementById("infoTextoLogin"), error.message, true);
+      }
+      // Sucesso: onAuthStateChange cuida de trocar a tela sozinho.
+    } catch (e) {
+      mostrarInfoAuth(document.getElementById("infoBarLogin"), document.getElementById("infoTextoLogin"), "Não foi possível contatar o Supabase agora.", true);
+    } finally {
+      btnLogin.disabled = false;
+      btnLogin.textContent = rotulo;
+    }
+  });
+
+  btnLogout.addEventListener("click", async () => {
+    await supabaseClient.auth.signOut();
+  });
+
+  // Sempre pega o access_token mais recente da sessão atual — nunca guarda
+  // isso manualmente em variável/localStorage (o SDK do Supabase já cuida
+  // de renovar sozinho quando expira).
+  async function obterAccessToken() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    return session ? session.access_token : null;
+  }
+
+  function aplicarEstadoAutenticacao(sessao) {
+    const autenticado = !!sessao;
+    viewAuth.style.display = autenticado ? "none" : "";
+    navAbas.style.display = autenticado ? "" : "none";
+    btnLogout.style.display = autenticado ? "" : "none";
+    saldoPill.style.display = autenticado ? "" : "none";
+    document.getElementById("viewBuscar").style.display = autenticado ? "" : "none";
+    if (!autenticado) {
+      document.getElementById("viewComprar").style.display = "none";
+    }
+    if (autenticado) {
+      atualizarSaldoDoToken();
+    } else {
+      saldoText.textContent = "saldo: —";
+    }
+  }
+
+  supabaseClient.auth.onAuthStateChange((_evento, sessao) => {
+    aplicarEstadoAutenticacao(sessao);
+  });
+
+  // ---------------------------------------------------------------------
+  // Captura e persistência de tracking (UTMs + click IDs de anúncios)
+  // ---------------------------------------------------------------------
+  // Captura na "entrada" (primeiro carregamento com esses parâmetros na URL)
+  // e guarda em localStorage, para que o pedido de PIX (que pode acontecer
+  // bem depois, após reload, navegação de aba, etc.) ainda consiga enviar o
+  // utm certo pro gateway — em vez de depender só da URL no instante exato
+  // do clique em "Gerar PIX".
+  const CHAVE_LOCALSTORAGE_TRACKING = "logsearch_tracking";
+  const DIAS_EXPIRACAO_TRACKING = 30;
+  const CHAVES_TRACKING = [
+    "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
+    "fbclid", "fbp", "ttclid", "click_id", "gclid",
+  ];
+
+  function _capturarEPersistirTracking() {
+    const parametrosAtuais = new URLSearchParams(window.location.search);
+
+    let dadosSalvos = {};
+    try {
+      const bruto = localStorage.getItem(CHAVE_LOCALSTORAGE_TRACKING);
+      if (bruto) {
+        const registro = JSON.parse(bruto);
+        const idadeMs = Date.now() - (registro.capturado_em || 0);
+        if (idadeMs < DIAS_EXPIRACAO_TRACKING * 24 * 60 * 60 * 1000) {
+          dadosSalvos = registro.dados || {};
+        }
+      }
+    } catch (e) {
+      // localStorage indisponível ou dado corrompido — segue com dadosSalvos vazio
+    }
+
+    let houveParametroNovo = false;
+    CHAVES_TRACKING.forEach(chave => {
+      const valor = parametrosAtuais.get(chave);
+      if (valor) {
+        dadosSalvos[chave] = valor;
+        houveParametroNovo = true;
+      }
+    });
+
+    if (houveParametroNovo) {
+      try {
+        localStorage.setItem(
+          CHAVE_LOCALSTORAGE_TRACKING,
+          JSON.stringify({ dados: dadosSalvos, capturado_em: Date.now() })
+        );
+      } catch (e) {
+        // sem problema, só não persiste pra próxima visita
+      }
+    }
+
+    return dadosSalvos;
+  }
+
+  function obterUtmParaEnvio() {
+    const dados = _capturarEPersistirTracking();
+    const params = new URLSearchParams();
+    Object.keys(dados).forEach(chave => {
+      if (dados[chave]) params.set(chave, dados[chave]);
+    });
+    return params.toString();
+  }
+
+  let resultadosAtuais = [];
+  let termoAtual = "";
+  let totalEncontradoAtual = 0;
+
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function mostrarToast(mensagem) {
+    toast.textContent = mensagem;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 1800);
+  }
+
+  function atualizarSaldoUI(saldoMoedas, online = true) {
+    saldoPill.className = online ? "status-pill online" : "status-pill offline";
+    saldoText.textContent = online ? `saldo: ${saldoMoedas} moedas` : "saldo: —";
+  }
+
+  async function atualizarSaldoDoToken() {
+    const accessToken = await obterAccessToken();
+    if (!accessToken) {
+      atualizarSaldoUI(null, false);
+      return;
+    }
+    try {
+      const resp = await fetch(`${API_BASE}/saldo`, {
+        headers: { "Authorization": `Bearer ${accessToken}` },
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        atualizarSaldoUI(null, false);
+        return;
+      }
+      atualizarSaldoUI(data.saldo_moedas);
+    } catch (e) {
+      atualizarSaldoUI(null, false);
+    }
+  }
+
+  async function verificarStatus() {
+    try {
+      const resp = await fetch(`${API_BASE}/status`);
+      if (!resp.ok) throw new Error("offline");
+      await resp.json();
+      statusPill.className = "status-pill online";
+      statusText.textContent = "API online";
+    } catch (e) {
+      statusPill.className = "status-pill offline";
+      statusText.textContent = "API offline";
+    }
+  }
+
+  function mostrarInfo(mensagemHtml, erro = false) {
+    infoBar.classList.add("show");
+    infoBar.classList.toggle("error", erro);
+    infoTexto.innerHTML = mensagemHtml;
+  }
+
+  function renderVazio(mensagemPrincipal, mensagemSecundaria) {
+    resultsPanel.innerHTML = "";
+    const div = emptyState.cloneNode(true);
+    div.querySelector(".main-msg").textContent = mensagemPrincipal;
+    div.querySelector(".sub-msg").textContent = mensagemSecundaria;
+    resultsPanel.appendChild(div);
+    resultadosAtuais = [];
+    atualizarBotoesExportacao();
+  }
+
+  function renderResultados(resultados) {
+    const paraExibir = resultados.slice(0, LIMITE_EXIBICAO_TELA);
+
+    resultsPanel.innerHTML = `
+      <div class="results-table-head">
+        <span>#</span>
+        <span>USUÁRIO</span>
+        <span>SENHA</span>
+      </div>
+    `;
+    paraExibir.forEach((r, i) => {
+      const row = document.createElement("div");
+      row.className = "result-row";
+      row.innerHTML = `
+        <span class="result-index">${i + 1}</span>
+        <span class="result-componente">${escapeHtml(r.componente)}</span>
+        <span class="result-evento">${escapeHtml(r.evento)}</span>
+      `;
+      resultsPanel.appendChild(row);
+    });
+    resultadosAtuais = resultados; // guarda TUDO que foi buscado (usado por copiar/exportar)
+    atualizarBotoesExportacao();
+  }
+
+  function atualizarBotoesExportacao() {
+    const temResultados = resultadosAtuais.length > 0;
+    btnCopiar.disabled = !temResultados;
+    btnExportar.disabled = !temResultados;
+  }
+
+  function montarTexto(lista) {
+    return lista.map(r => `${r.componente}:${r.evento}`).join("\n");
+  }
+
+  async function buscar() {
+    const accessToken = await obterAccessToken();
+    const termo = termoInput.value.trim();
+
+    if (!accessToken) {
+      mostrarInfo("Sua sessão expirou. Faça login novamente.", true);
+      return;
+    }
+
+    if (!termo) {
+      termoInput.focus();
+      return;
+    }
+
+    if (!PADRAO_SITE.test(termo)) {
+      termoInput.classList.add("invalido");
+      termoInput.focus();
+      mostrarInfo("Digite um domínio válido (ex: site.com) ou uma URL completa (ex: https://site.com/login). Palavras soltas não são aceitas.", true);
+      return;
+    }
+    termoInput.classList.remove("invalido");
+
+    let limite = parseInt(limiteInput.value, 10);
+    if (!Number.isFinite(limite) || limite < 1) limite = 1;
+    if (limite > 100000) limite = 100000;
+    limiteInput.value = limite;
+
+    btnBuscar.disabled = true;
+    btnLabel.textContent = "Buscando...";
+    infoBar.classList.remove("show");
+    footerNote.textContent = "";
+
+    try {
+      const url = `${API_BASE}/buscar?site=${encodeURIComponent(termo)}&limit=${limite}`;
+      const resp = await fetch(url, { headers: { "Authorization": `Bearer ${accessToken}` } });
+      const data = await resp.json();
+
+      if (resp.status === 401) {
+        mostrarInfo("Sua sessão expirou. Faça login novamente.", true);
+        renderVazio("Sessão expirada.", "Faça login novamente para continuar buscando.");
+        return;
+      }
+
+      if (resp.status === 422) {
+        termoInput.classList.add("invalido");
+        mostrarInfo("A API recusou o termo: precisa ser um domínio válido (ex: site.com) ou URL completa.", true);
+        renderVazio("Termo de busca inválido.", "Use um domínio (site.com) ou URL completa (https://site.com/login).");
+        return;
+      }
+
+      if (resp.status === 402) {
+        mostrarInfo(
+          `Saldo insuficiente: você tem <b>${data.saldo_moedas}</b> moeda(s), mas o limite pedido custaria até <b>${data.custo_maximo_moedas}</b>. Reduza o limite ou adicione mais moedas.`,
+          true
+        );
+        renderVazio("Saldo de moedas insuficiente.", "Reduza o limite de resultados ou adicione mais moedas.");
+        atualizarSaldoUI(data.saldo_moedas);
+        return;
+      }
+
+      if (!resp.ok) {
+        mostrarInfo(data.erro ? escapeHtml(data.erro) : "Erro na busca.", true);
+        renderVazio("Erro na busca.", data.erro || "Tente novamente.");
+        return;
+      }
+
+      statusPill.className = "status-pill online";
+      statusText.textContent = "API online";
+      termoAtual = termo;
+      totalEncontradoAtual = data.total_encontrado;
+      atualizarSaldoUI(data.saldo_restante);
+
+      let mensagemPrincipal =
+        `<b>${data.total_encontrado}</b> registro(s) encontrado(s) para URL contendo ` +
+        `"<b>${escapeHtml(termo)}</b>"`;
+
+      // Deixa explícito quando só uma fatia do total foi de fato buscada
+      // (respeitando o "limite" pedido) — sem isso, alguém que buscou com
+      // limite baixo vê "10.000 encontrados" e não entende por que só
+      // recebeu 50, já que essa diferença ficava só implícita.
+      if (data.retornado < data.total_encontrado) {
+        mensagemPrincipal += ` — <b>${data.retornado}</b> retornado(s) nesta busca (aumente o limite para buscar mais)`;
+      }
+
+      mensagemPrincipal += ` <span class="muted">· ${data.moedas_cobradas} moeda(s) cobrada(s) · busca em ${data.tempo_busca_segundos}s</span>`;
+
+      mostrarInfo(mensagemPrincipal);
+
+      if (data.resultados.length === 0) {
+        renderVazio("Nenhum registro encontrado.", `Nenhuma URL corresponde a "${termo}".`);
+      } else {
+        renderResultados(data.resultados);
+
+        const buscados = data.resultados.length;
+        const exibidos = Math.min(buscados, LIMITE_EXIBICAO_TELA);
+        const partes = [];
+
+        if (buscados > exibidos) {
+          partes.push(`Exibindo os primeiros ${exibidos.toLocaleString("pt-BR")} na tela, mas os ${buscados.toLocaleString("pt-BR")} buscados estão disponíveis para copiar/exportar.`);
+        }
+        if (data.total_encontrado > buscados) {
+          partes.push(`Existem ${data.total_encontrado.toLocaleString("pt-BR")} registros no total — aumente o limite para buscar mais.`);
+        }
+        footerNote.textContent = partes.join(" ");
+      }
+    } catch (e) {
+      statusPill.className = "status-pill offline";
+      statusText.textContent = "API offline";
+      mostrarInfo(`Não foi possível contatar a API em ${API_BASE}.`, true);
+      renderVazio("Não foi possível contatar a API.", `Verifique se ela está rodando em ${API_BASE}.`);
+    } finally {
+      btnBuscar.disabled = false;
+      btnLabel.textContent = "Buscar registros";
+    }
+  }
+
+  btnBuscar.addEventListener("click", buscar);
+  termoInput.addEventListener("keydown", (e) => { if (e.key === "Enter") buscar(); });
+
+  btnVerificar.addEventListener("click", async () => {
+    const accessToken = await obterAccessToken();
+    const termo = termoInput.value.trim();
+
+    if (!accessToken) {
+      mostrarInfo("Sua sessão expirou. Faça login novamente.", true);
+      return;
+    }
+    if (!termo || !PADRAO_SITE.test(termo)) {
+      termoInput.classList.add("invalido");
+      termoInput.focus();
+      mostrarInfo("Digite um domínio válido (ex: site.com) ou uma URL completa antes de verificar.", true);
+      return;
+    }
+    termoInput.classList.remove("invalido");
+
+    const rotuloOriginal = btnVerificar.textContent;
+    btnVerificar.disabled = true;
+    btnVerificar.textContent = "Verificando...";
+
+    try {
+      const url = `${API_BASE}/contar?site=${encodeURIComponent(termo)}`;
+      const resp = await fetch(url, { headers: { "Authorization": `Bearer ${accessToken}` } });
+      const data = await resp.json();
+
+      if (resp.status === 401) {
+        mostrarInfo("Sua sessão expirou. Faça login novamente.", true);
+        return;
+      }
+      if (!resp.ok) {
+        mostrarInfo(data.erro ? escapeHtml(data.erro) : "Erro ao verificar disponibilidade.", true);
+        return;
+      }
+
+      mostrarInfo(
+        `<b>${data.total_disponivel}</b> registro(s) disponível(is) para "<b>${escapeHtml(termo)}</b>" ` +
+        `<span class="muted">· consulta gratuita, nenhuma moeda foi descontada</span>`
+      );
+    } catch (e) {
+      mostrarInfo(`Não foi possível contatar a API em ${API_BASE}.`, true);
+    } finally {
+      btnVerificar.disabled = false;
+      btnVerificar.textContent = rotuloOriginal;
+    }
+  });
+  limiteInput.addEventListener("keydown", (e) => { if (e.key === "Enter") buscar(); });
+
+  btnCopiar.addEventListener("click", async () => {
+    if (resultadosAtuais.length === 0) return;
+    const texto = montarTexto(resultadosAtuais);
+    try {
+      await navigator.clipboard.writeText(texto);
+      mostrarToast(`${resultadosAtuais.length.toLocaleString("pt-BR")} registro(s) copiado(s)!`);
+    } catch (e) {
+      mostrarToast("Não foi possível copiar (texto muito grande ou sem permissão).");
+    }
+  });
+
+  btnExportar.addEventListener("click", () => {
+    if (resultadosAtuais.length === 0) return;
+    const texto = montarTexto(resultadosAtuais);
+    const blob = new Blob([texto], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const nomeArquivo = `resultados_${(termoAtual || "busca").replace(/[^a-z0-9._-]/gi, "_")}.txt`;
+    a.href = url;
+    a.download = nomeArquivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    mostrarToast(`${resultadosAtuais.length.toLocaleString("pt-BR")} registro(s) exportado(s)!`);
+  });
+
+  verificarStatus();
+
+  // Captura fbclid/ttclid/click_id/UTMs assim que a página carrega (a
+  // "entrada" vinda do anúncio) — não espera o usuário chegar até a tela
+  // de compra pra só então tentar ler a URL.
+  _capturarEPersistirTracking();
+
+  // Não precisa restaurar sessão manualmente — o SDK do Supabase já
+  // persiste a sessão sozinho e o onAuthStateChange (registrado acima) já
+  // dispara automaticamente com o estado atual assim que a página carrega.
+
+  // -----------------------------------------------------------------------
+  // Banner de avisos (publicado pelo painel admin)
+  // -----------------------------------------------------------------------
+  async function carregarAvisos() {
+    try {
+      const resp = await fetch(`${API_BASE}/avisos`);
+      const data = await resp.json();
+      const container = document.getElementById("avisosBanner");
+      container.innerHTML = "";
+      (data.avisos || []).forEach(a => {
+        const div = document.createElement("div");
+        div.className = `aviso-item ${a.tipo}`;
+        div.textContent = a.mensagem;
+        container.appendChild(div);
+      });
+    } catch (e) {
+      // sem avisos disponíveis — sem problema, só não mostra banner nenhum
+    }
+  }
+  carregarAvisos();
+
+  // -----------------------------------------------------------------------
+  // Abas (Buscar / Comprar moedas)
+  // -----------------------------------------------------------------------
+
+  const abas = document.querySelectorAll(".nav-item[data-view]");
+  const viewBuscar = document.getElementById("viewBuscar");
+  const viewComprar = document.getElementById("viewComprar");
+  abas.forEach(aba => {
+    aba.addEventListener("click", () => {
+      abas.forEach(a => a.classList.remove("active"));
+      aba.classList.add("active");
+
+      const alvo = aba.dataset.view;
+      viewBuscar.style.display = alvo === "viewBuscar" ? "" : "none";
+      viewComprar.style.display = alvo === "viewComprar" ? "" : "none";
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Dropdown customizado de pacotes (tela de compra) — carregado de /pacotes
+  // -----------------------------------------------------------------------
+
+  const pacoteCompraDropdown = document.getElementById("pacoteCompraDropdown");
+  const pacoteCompraBtn = document.getElementById("pacoteCompraBtn");
+  const pacoteCompraBtnLabel = document.getElementById("pacoteCompraBtnLabel");
+  const pacoteCompraList = document.getElementById("pacoteCompraList");
+  let moedasSelecionadas = null;
+
+  function formatarPrecoPacote(preco) {
+    return `R$ ${Number(preco).toFixed(2).replace(".", ",")}`;
+  }
+
+  function _ativarSelecaoPacote(opcao) {
+    moedasSelecionadas = parseInt(opcao.dataset.moedas, 10);
+    pacoteCompraBtnLabel.textContent = opcao.textContent;
+    pacoteCompraList.querySelectorAll(".custom-select-option").forEach(o => o.classList.remove("selected"));
+    opcao.classList.add("selected");
+    pacoteCompraDropdown.classList.remove("open");
+  }
+
+  async function carregarPacotesDisponiveis() {
+    try {
+      const resp = await fetch(`${API_BASE}/pacotes`);
+      const data = await resp.json();
+      const pacotes = data.pacotes || [];
+
+      pacoteCompraList.innerHTML = "";
+      if (pacotes.length === 0) {
+        pacoteCompraBtnLabel.textContent = "Nenhum pacote disponível";
+        return;
+      }
+
+      pacotes.forEach((p, i) => {
+        const opcao = document.createElement("div");
+        opcao.className = "custom-select-option" + (i === 0 ? " selected" : "");
+        opcao.dataset.moedas = p.moedas;
+        opcao.textContent = `${p.moedas} moedas · ${formatarPrecoPacote(p.preco_reais)}`;
+        opcao.addEventListener("click", () => _ativarSelecaoPacote(opcao));
+        pacoteCompraList.appendChild(opcao);
+      });
+
+      _ativarSelecaoPacote(pacoteCompraList.querySelector(".custom-select-option"));
+    } catch (e) {
+      pacoteCompraBtnLabel.textContent = "Erro ao carregar pacotes";
+    }
+  }
+
+  carregarPacotesDisponiveis();
+
+  pacoteCompraBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    pacoteCompraDropdown.classList.toggle("open");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!pacoteCompraDropdown.contains(e.target)) {
+      pacoteCompraDropdown.classList.remove("open");
+    }
+  });
+
+  // -----------------------------------------------------------------------
+  // Fluxo de compra (gateway real via backend — Duttyfy)
+  // -----------------------------------------------------------------------
+
+  const compraPasso1 = document.getElementById("compraPasso1");
+  const compraPasso2 = document.getElementById("compraPasso2");
+  const btnContinuarPagamento = document.getElementById("btnContinuarPagamento");
+  const btnVoltarCompra = document.getElementById("btnVoltarCompra");
+  const btnCopiarPix = document.getElementById("btnCopiarPix");
+  const infoBarCompra = document.getElementById("infoBarCompra");
+  const infoTextoCompra = document.getElementById("infoTextoCompra");
+  const resumoToken = document.getElementById("resumoToken");
+  const resumoMoedas = document.getElementById("resumoMoedas");
+  const resumoValor = document.getElementById("resumoValor");
+  const pixCopiaColaInput = document.getElementById("pixCopiaColaInput");
+  const pixStatusBox = document.getElementById("pixStatusBox");
+  const pixStatusText = document.getElementById("pixStatusText");
+  const pixQrCanvas = document.getElementById("pixQrCanvas");
+
+  const clienteNomeInput = document.getElementById("clienteNomeInput");
+  const clienteDocumentoInput = document.getElementById("clienteDocumentoInput");
+  const clienteEmailInput = document.getElementById("clienteEmailInput");
+  const clienteTelefoneInput = document.getElementById("clienteTelefoneInput");
+  const cupomInput = document.getElementById("cupomInput");
+
+  let pedidoAtualId = null;
+  let pedidoAtualSegredo = null;
+  let intervaloPolling = null;
+
+  function mostrarInfoCompra(mensagemHtml, erro = false) {
+    infoBarCompra.classList.add("show");
+    infoBarCompra.classList.toggle("error", erro);
+    infoTextoCompra.innerHTML = mensagemHtml;
+  }
+
+  function pararPolling() {
+    if (intervaloPolling) {
+      clearInterval(intervaloPolling);
+      intervaloPolling = null;
+    }
+  }
+
+  async function consultarStatusPedido() {
+    if (!pedidoAtualId || !pedidoAtualSegredo) return;
+    try {
+      const resp = await fetch(`${API_BASE}/comprar/status?pedido_id=${pedidoAtualId}&segredo=${encodeURIComponent(pedidoAtualSegredo)}`);
+      const data = await resp.json();
+      if (resp.ok && data.status === "pago") {
+        marcarPedidoComoPago();
+      }
+    } catch (e) {
+      // silencioso — só é um polling em segundo plano; o próximo ciclo tenta de novo
+    }
+  }
+
+  function marcarPedidoComoPago() {
+    pararPolling();
+    pixStatusBox.classList.add("pago");
+    pixStatusText.textContent = "Pagamento confirmado!";
+    mostrarToast("Moedas creditadas!");
+    atualizarSaldoDoToken();
+  }
+
+  function gerarQrCode(pixCode) {
+    pixQrCanvas.innerHTML = ""; // limpa QR anterior, se houver
+    new QRCode(pixQrCanvas, {
+      text: pixCode,
+      width: 192,
+      height: 192,
+      colorDark: "#0a0a0a",
+      colorLight: "#ffffff",
+    });
+  }
+
+  btnContinuarPagamento.addEventListener("click", async () => {
+    const nome = clienteNomeInput.value.trim();
+    const documento = clienteDocumentoInput.value.replace(/\D/g, "");
+    const email = clienteEmailInput.value.trim();
+    const telefone = clienteTelefoneInput.value.replace(/\D/g, "");
+
+    const accessToken = await obterAccessToken();
+    if (!accessToken) {
+      mostrarInfoCompra("Sua sessão expirou. Faça login novamente.", true);
+      return;
+    }
+    if (!nome) {
+      clienteNomeInput.focus();
+      mostrarInfoCompra("Informe seu nome completo.", true);
+      return;
+    }
+    if (documento.length !== 11 && documento.length !== 14) {
+      clienteDocumentoInput.focus();
+      mostrarInfoCompra("CPF deve ter 11 dígitos ou CNPJ 14 dígitos.", true);
+      return;
+    }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      clienteEmailInput.focus();
+      mostrarInfoCompra("Informe um e-mail válido.", true);
+      return;
+    }
+    if (telefone.length !== 10 && telefone.length !== 11) {
+      clienteTelefoneInput.focus();
+      mostrarInfoCompra("Telefone deve ter 10 ou 11 dígitos, com DDD.", true);
+      return;
+    }
+
+    const rotuloOriginal = btnContinuarPagamento.textContent;
+    btnContinuarPagamento.disabled = true;
+    btnContinuarPagamento.textContent = "Gerando PIX...";
+
+    try {
+      const corpo = {
+        moedas: moedasSelecionadas,
+        cliente: { nome, documento, email, telefone },
+        utm: obterUtmParaEnvio(),
+        cupom: cupomInput.value.trim(),
+      };
+
+      const resp = await fetch(`${API_BASE}/comprar/iniciar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}` },
+        body: JSON.stringify(corpo),
+      });
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        mostrarInfoCompra(data.erro ? escapeHtml(data.erro) : "Erro ao gerar o PIX.", true);
+        return;
+      }
+
+      pedidoAtualId = data.pedido_id;
+      pedidoAtualSegredo = data.segredo;
+
+      resumoToken.textContent = data.token;
+      resumoMoedas.textContent = `${data.moedas} moeda(s)`;
+      resumoValor.textContent = `R$ ${data.valor_reais.toFixed(2).replace(".", ",")}` + (data.cupom_aplicado ? ` (cupom ${data.cupom_aplicado} aplicado)` : "");
+      pixCopiaColaInput.value = data.pix_code;
+      gerarQrCode(data.pix_code);
+
+      pixStatusBox.classList.remove("pago");
+      pixStatusText.textContent = "Aguardando pagamento...";
+
+      compraPasso1.style.display = "none";
+      compraPasso2.style.display = "";
+
+      pararPolling();
+      consultarStatusPedido(); // já confere uma vez de imediato
+      intervaloPolling = setInterval(consultarStatusPedido, 5000);
+      // Para de tentar depois de 15 minutos (mesma janela do PIX).
+      setTimeout(pararPolling, 15 * 60 * 1000);
+    } catch (e) {
+      mostrarInfoCompra(`Não foi possível contatar a API em ${API_BASE}.`, true);
+    } finally {
+      btnContinuarPagamento.disabled = false;
+      btnContinuarPagamento.textContent = rotuloOriginal;
+    }
+  });
+
+  btnVoltarCompra.addEventListener("click", () => {
+    pararPolling();
+    compraPasso2.style.display = "none";
+    compraPasso1.style.display = "";
+    infoBarCompra.classList.remove("show");
+  });
+
+  btnCopiarPix.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(pixCopiaColaInput.value);
+      mostrarToast("Código copiado!");
+    } catch (e) {
+      mostrarToast("Não foi possível copiar.");
+    }
+  });
+</script>
+
+
+</body>
+</html>
